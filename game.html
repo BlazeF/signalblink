@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .signal {
+            width: 100px;
+            height: 100px;
+            margin: 20px auto;
+            border-radius: 50%;
+            background-color: grey;
+        }
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .red { background-color: red; }
+        .yellow { background-color: yellow; }
+        .green { background-color: green; }
+        .start-button {
+            padding: 10px 30px;
+            margin-top: 20px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Signal Game</h1>
+    
+    <div class="signal" id="signal"></div>
+
+    <div class="buttons-container">
+        <div class="button red" onclick="checkSignal('red')">
+            Red
+            <p>Score: <span id="red-score">0</span></p>
+        </div>
+        <div class="button yellow" onclick="checkSignal('yellow')">
+            Yellow
+            <p>Score: <span id="yellow-score">0</span></p>
+        </div>
+        <div class="button green" onclick="checkSignal('green')">
+            Green
+            <p>Score: <span id="green-score">0</span></p>
+        </div>
+    </div>
+
+    <button class="start-button" onclick="startGame()">Start</button>
+
+    <script>
+        const signals = ['red', 'yellow', 'green'];
+        let currentSignal = '';
+        let scores = { red: 0, yellow: 0, green: 0 };
+        let signalInterval;
+        let intervalTime = 1000; // Start at 1 second
+
+        function startGame() {
+            document.querySelector('.start-button').disabled = true; // Disable start button after starting the game
+
+            // Start changing signals at initial speed
+            signalInterval = setInterval(changeSignal, intervalTime);
+            
+            // Speed up signals every 10 seconds by reducing interval time
+            setInterval(() => {
+                if (intervalTime > 400) { // Set a minimum interval limit
+                    clearInterval(signalInterval); // Clear previous interval
+                    intervalTime -= 100; // Decrease interval time
+                    signalInterval = setInterval(changeSignal, intervalTime); // Restart with a faster interval
+                }
+            }, 10000); // Speed up every 10 seconds
+        }
+
+        function changeSignal() {
+            currentSignal = signals[Math.floor(Math.random() * signals.length)];
+            document.getElementById('signal').style.backgroundColor = currentSignal;
+        }
+
+        function checkSignal(color) {
+            if (color === currentSignal) {
+                scores[color]++;
+            } else {
+                scores[color] = 0;
+            }
+            document.getElementById(`${color}-score`).innerText = scores[color];
+        }
+    </script>
+
+</body>
+</html>
