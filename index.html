@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Signal Game</title>
+
     <style>
         body {
             display: flex;
@@ -13,26 +14,30 @@
             height: 100vh;
             font-family: Arial, sans-serif;
         }
+
         .signal {
-            font-size: 5rem;
+            font-size: 4rem;
             margin: 20px;
             padding: 20px;
             border: 3px solid black;
             border-radius: 10px;
             text-align: center;
-            width: 200px;
-            height: 200px;
+            width: 220px;
+            height: 220px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
         .red { background-color: red; color: white; }
         .yellow { background-color: yellow; color: black; }
         .green { background-color: green; color: white; }
+
         .score-board {
             font-size: 1.5rem;
-            margin: 20px;
+            margin: 10px;
         }
+
         .hidden-input {
             opacity: 0;
             position: absolute;
@@ -40,15 +45,20 @@
         }
     </style>
 </head>
+
 <body>
 
     <h1>Signal Game</h1>
-    <div id="signal" class="signal">Press "L" to Start</div>
-    <div class="score-board">
-        <p>Score: <span id="user-score">0</span>/<span id="total-score">0</span></p>
+
+    <div id="signal" class="signal">
+        Hold "L" for 1.5s
     </div>
 
-    <!-- Hidden input to trigger mobile keyboard -->
+    <div class="score-board">
+        Score: <span id="user-score">0</span>/<span id="total-score">0</span>
+    </div>
+
+    <!-- Hidden input for mobile keyboard -->
     <input type="text" id="keyboard-input" class="hidden-input" autofocus>
 
     <script>
@@ -62,65 +72,86 @@
         let currentSignal = null;
         let signalTimeout = null;
 
-        // Define the signals
+        // Hold-L logic
+        let lHoldStartTime = null;
+        let lHoldTimer = null;
+        const HOLD_DURATION = 1500; // ms
+
         const signals = [
             { color: 'red', key: 'R' },
             { color: 'yellow', key: 'Y' },
             { color: 'green', key: 'G' }
         ];
 
-        // Focus input to open the mobile keyboard when the game starts
         window.onload = () => {
             keyboardInput.focus();
         };
 
-        // Function to show the next signal
         function showNextSignal() {
             const randomIndex = Math.floor(Math.random() * signals.length);
             currentSignal = signals[randomIndex];
+
             signalDiv.textContent = currentSignal.color.toUpperCase();
             signalDiv.className = `signal ${currentSignal.color}`;
-            
-            // Start a timer to clear the signal after 1 second
+
             signalTimeout = setTimeout(() => {
-                clearSignal(false); // Clear signal if no correct key is pressed
+                clearSignal(false);
             }, 1000);
         }
 
-        // Function to clear the signal and update scores
         function clearSignal(correct) {
             if (!correct) {
                 totalScore++;
                 totalScoreDisplay.textContent = totalScore;
             }
-            signalDiv.textContent = "Press 'L' for next signal";
+
+            signalDiv.textContent = 'Hold "L" for 1.5s';
             signalDiv.className = 'signal';
-            currentSignal = null; // Reset current signal
-            clearTimeout(signalTimeout); // Clear timeout if it hasn't triggered
+            currentSignal = null;
+
+            clearTimeout(signalTimeout);
+            clearTimeout(lHoldTimer);
+            lHoldTimer = null;
+            lHoldStartTime = null;
         }
 
-        // Handle keydown events from the input field
         keyboardInput.addEventListener('input', (event) => {
-            const pressedKey = event.target.value.toUpperCase(); // Get uppercase of input
-            keyboardInput.value = ""; // Clear input field after each press
-            
-            // If "L" is pressed, show the next signal
+            const pressedKey = event.target.value.toUpperCase();
+            keyboardInput.value = "";
+
+            /* =======================
+               HOLD L TO START SIGNAL
+               ======================= */
             if (pressedKey === 'L' && !currentSignal) {
-                showNextSignal();
+
+                if (!lHoldStartTime) {
+                    lHoldStartTime = Date.now();
+                    signalDiv.textContent = 'Holding L...';
+
+                    lHoldTimer = setTimeout(() => {
+                        showNextSignal();
+                        lHoldStartTime = null;
+                    }, HOLD_DURATION);
+                }
+                return;
             }
-            // If the correct key is pressed for the current signal
-            else if (currentSignal && pressedKey === currentSignal.key) {
+
+            /* =======================
+               SIGNAL ACTIVE
+               ======================= */
+            if (currentSignal && pressedKey === currentSignal.key) {
                 userScore++;
                 totalScore++;
+
                 userScoreDisplay.textContent = userScore;
                 totalScoreDisplay.textContent = totalScore;
-                clearSignal(true); // Clear the signal correctly
-            }
-            // If an incorrect key is pressed while the signal is active
+
+                clearSignal(true);
+            } 
             else if (currentSignal) {
                 totalScore++;
                 totalScoreDisplay.textContent = totalScore;
-                clearSignal(false); // Clear signal as incorrect
+                clearSignal(false);
             }
         });
     </script>
