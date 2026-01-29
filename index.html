@@ -16,14 +16,14 @@
         }
 
         .signal {
-            font-size: 4rem;
+            font-size: 3.5rem;
             margin: 20px;
             padding: 20px;
             border: 3px solid black;
             border-radius: 10px;
             text-align: center;
-            width: 220px;
-            height: 220px;
+            width: 240px;
+            height: 240px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -51,14 +51,13 @@
     <h1>Signal Game</h1>
 
     <div id="signal" class="signal">
-        Hold "L" for 1.5s
+        Hold "L" for 3s
     </div>
 
     <div class="score-board">
         Score: <span id="user-score">0</span>/<span id="total-score">0</span>
     </div>
 
-    <!-- Hidden input for mobile keyboard -->
     <input type="text" id="keyboard-input" class="hidden-input" autofocus>
 
     <script>
@@ -72,10 +71,10 @@
         let currentSignal = null;
         let signalTimeout = null;
 
-        // Hold-L logic
-        let lHoldStartTime = null;
-        let lHoldTimer = null;
-        const HOLD_DURATION = 1500; // ms
+        // HOLD CONFIG
+        const HOLD_DURATION = 3000; // 3 seconds
+        let holdInterval = null;
+        let holdStartTime = null;
 
         const signals = [
             { color: 'red', key: 'R' },
@@ -105,14 +104,14 @@
                 totalScoreDisplay.textContent = totalScore;
             }
 
-            signalDiv.textContent = 'Hold "L" for 1.5s';
+            signalDiv.textContent = 'Hold "L" for 3s';
             signalDiv.className = 'signal';
             currentSignal = null;
 
             clearTimeout(signalTimeout);
-            clearTimeout(lHoldTimer);
-            lHoldTimer = null;
-            lHoldStartTime = null;
+            clearInterval(holdInterval);
+            holdInterval = null;
+            holdStartTime = null;
         }
 
         keyboardInput.addEventListener('input', (event) => {
@@ -120,18 +119,28 @@
             keyboardInput.value = "";
 
             /* =======================
-               HOLD L TO START SIGNAL
+               HOLD L WITH COUNTDOWN
                ======================= */
             if (pressedKey === 'L' && !currentSignal) {
 
-                if (!lHoldStartTime) {
-                    lHoldStartTime = Date.now();
-                    signalDiv.textContent = 'Holding L...';
+                if (!holdStartTime) {
+                    holdStartTime = Date.now();
 
-                    lHoldTimer = setTimeout(() => {
-                        showNextSignal();
-                        lHoldStartTime = null;
-                    }, HOLD_DURATION);
+                    holdInterval = setInterval(() => {
+                        const elapsed = Date.now() - holdStartTime;
+                        const remaining = Math.ceil((HOLD_DURATION - elapsed) / 1000);
+
+                        if (remaining > 0) {
+                            signalDiv.textContent = `Hold L... ${remaining}`;
+                        }
+
+                        if (elapsed >= HOLD_DURATION) {
+                            clearInterval(holdInterval);
+                            holdInterval = null;
+                            holdStartTime = null;
+                            showNextSignal();
+                        }
+                    }, 100);
                 }
                 return;
             }
